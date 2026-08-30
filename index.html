@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>日本美食速查</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Noto+Serif+TC:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EC;
+    --paper-deep:#F1E7D3;
+    --paper-card:#FFFDF8;
+    --ink:#232F3B;
+    --ink-soft:#66727C;
+    --accent:#B94A28;
+    --accent-soft:#E7C9AE;
+    --matcha:#5C7A52;
+    --gold:#C79A2E;
+    --line:#DCD0B6;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} *{animation:none!important;transition:none!important;} }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Serif TC', serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:80px;
+  }
+
+  /* ---------- Header ---------- */
+  .hero{
+    padding:28px 20px 18px;
+    text-align:center;
+    background:
+      linear-gradient(var(--paper), var(--paper));
+    border-bottom:1px solid var(--line);
+  }
+  .hero .eyebrow{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:11px;
+    letter-spacing:.28em;
+    color:var(--accent);
+    text-transform:uppercase;
+  }
+  .hero h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(26px,6vw,36px);
+    margin:6px 0 4px;
+    letter-spacing:.04em;
+  }
+  .hero p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+  }
+
+  /* ---------- Sticky nav ---------- */
+  .navbar{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--ink);
+    border-bottom:3px solid var(--gold);
+  }
+  .nav-scroll{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:4px 6px;
+  }
+  .navpill{
+    flex:0 0 auto;
+    position:relative;
+    padding:10px 12px 9px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:13px;
+    font-weight:500;
+    color:#C9CFD4;
+    background:none;
+    border:none;
+    cursor:pointer;
+    white-space:nowrap;
+    letter-spacing:.02em;
+  }
+  .navpill::after{
+    content:"";
+    position:absolute;
+    left:10px; right:10px; bottom:2px;
+    height:3px;
+    background:var(--accent);
+    transform:scaleX(0);
+    transform-origin:center;
+    transition:transform .2s ease;
+  }
+  .navpill.active{ color:#FDF9F0; }
+  .navpill.active::after{ transform:scaleX(1); }
+
+  /* ---------- Search ---------- */
+  .search-wrap{
+    max-width:640px;
+    margin:20px auto 6px;
+    padding:0 20px;
+  }
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:11px 14px;
+    box-shadow:0 1px 0 var(--line);
+  }
+  .search-box svg{ flex:0 0 auto; opacity:.55; }
+  .search-box input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:none;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .search-box input::placeholder{ color:#A6A091; }
+  .search-hint{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    padding:6px 4px 0;
+  }
+
+  /* ---------- Sections ---------- */
+  .container{ max-width:640px; margin:0 auto; padding:10px 20px 0; }
+
+  section.category{ padding-top:34px; scroll-margin-top:56px; }
+  .cat-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .seal{
+    flex:0 0 auto;
+    width:46px; height:46px;
+    border-radius:50%;
+    border:2px solid var(--accent);
+    box-shadow:0 0 0 1px var(--paper), 0 0 0 3px var(--accent-soft);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--accent);
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:20px;
+    transform:rotate(var(--tilt,-4deg));
+  }
+  .cat-titles h2{
+    margin:0;
+    font-family:'Shippori Mincho', serif;
+    font-size:21px;
+    font-weight:600;
+    letter-spacing:.03em;
+  }
+  .cat-titles .count{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .rule{
+    height:1px;
+    background:linear-gradient(to right, var(--gold), var(--line) 40%);
+    margin-bottom:16px;
+  }
+
+  .cards{ display:flex; flex-direction:column; gap:6px; }
+  .card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--matcha);
+    border-radius:var(--radius);
+    padding:9px 54px 9px 10px;
+  }
+  .card.dragging{ opacity:.55; border-style:dashed; }
+
+  .card .ctrl-top{
+    position:absolute;
+    top:5px; right:4px;
+    display:flex;
+    gap:0;
+  }
+
+  .card .row1{
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .card .handle{
+    flex:0 0 auto;
+    cursor:grab;
+    color:#B9AFA0;
+    font-size:14px;
+    line-height:1;
+    padding:4px 2px;
+    touch-action:none;
+    user-select:none;
+  }
+  .card .handle:active{ cursor:grabbing; }
+  .card .speak{
+    flex:0 0 auto;
+    border:none;
+    background:none;
+    padding:4px;
+    line-height:0;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .card .speak:hover{ color:var(--accent); }
+  .card .speak svg{ width:16px; height:16px; display:block; }
+  .card .speak.speaking{ color:var(--accent); }
+  .card .jp{
+    font-family:'Shippori Mincho', serif;
+    font-size:15px;
+    font-weight:600;
+    white-space:normal;
+    overflow-wrap:break-word;
+    flex:1 1 auto;
+    min-width:0;
+    cursor:pointer;
+    transition:color .15s ease;
+  }
+  .card .jp.copied{ color:var(--accent); }
+
+  .card .row2{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-left:47px;
+  }
+  .card .zh{
+    font-family:'Noto Serif TC', serif;
+    font-size:12.5px;
+    color:#4B5560;
+    white-space:normal;
+    overflow-wrap:break-word;
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .card .src{
+    flex:0 0 auto;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:10px;
+    letter-spacing:.02em;
+    color:var(--ink-soft);
+    background:var(--paper-deep);
+    padding:2px 8px;
+    border-radius:20px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .card .src.expanded{ background:var(--accent-soft); color:var(--ink); }
+
+  .card .edit{
+    flex:0 0 auto;
+    border:none;
+    background:none;
+    color:var(--ink-soft);
+    padding:4px;
+    cursor:pointer;
+    line-height:0;
+  }
+  .card .edit:hover{ color:var(--matcha); }
+  .card .edit svg{ width:14px; height:14px; display:block; }
+
+  .card .del{
+    flex:0 0 auto;
+    border:none;
+    background:none;
+    color:#B9AFA0;
+    font-size:15px;
+    cursor:pointer;
+    line-height:1;
+    padding:4px;
+  }
+  .card .del:hover{ color:var(--accent); }
+
+  .empty{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    padding:14px 2px;
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    text-align:center;
+  }
+
+  /* ---------- Add form ---------- */
+  .add-toggle{
+    margin-top:10px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12.5px;
+    color:var(--accent);
+    background:none;
+    border:1px dashed var(--accent-soft);
+    border-radius:var(--radius);
+    padding:8px 12px;
+    cursor:pointer;
+    width:100%;
+    text-align:left;
+  }
+  .add-form{
+    display:none;
+    margin-top:10px;
+    background:var(--paper-deep);
+    border-radius:var(--radius);
+    padding:12px;
+  }
+  .add-form.open{ display:block; }
+  .edit-form{ margin-top:0 !important; }
+  .add-form .row{ display:flex; gap:8px; margin-bottom:8px; }
+  .add-form input{
+    flex:1;
+    min-width:0;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:13px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    background:var(--paper-card);
+    outline:none;
+  }
+  .add-form input:focus{ border-color:var(--accent); }
+  .add-form .actions{ display:flex; justify-content:flex-end; gap:8px; }
+  .add-form button.submit{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12.5px;
+    background:var(--accent);
+    color:#FFF6EE;
+    border:none;
+    border-radius:4px;
+    padding:8px 16px;
+    cursor:pointer;
+  }
+  .add-form button.cancel{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12.5px;
+    background:none;
+    color:var(--ink-soft);
+    border:none;
+    cursor:pointer;
+    padding:8px 6px;
+  }
+
+  footer{
+    text-align:center;
+    padding:36px 20px 10px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:11px;
+    color:#A6A091;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Japan Food Lookup</div>
+  <h1>日本美食速查</h1>
+</div>
+
+<div class="navbar">
+  <div class="nav-scroll" id="navScroll"></div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" type="text" placeholder="搜尋日文、中文或來源，例如「拉麵」或「らーめん」">
+  </div>
+  <div class="search-hint">找不到想吃的？在下方分類點「＋ 新增項目」慢慢累積清單；按住項目左側「≡」可拖曳調整順序（搜尋時暫不可拖曳）</div>
+</div>
+
+<div class="container" id="container"></div>
+
+<footer>個人旅行小工具・資料儲存在此頁面裝置端</footer>
+
+<script>
+const STORAGE_KEY = 'foodguide-data-v1';
+
+const CATEGORY_META = [
+  { key:'麵', seal:'麺', tilt:'-4deg' },
+  { key:'肉', seal:'肉', tilt:'3deg' },
+  { key:'海鮮', seal:'魚', tilt:'-3deg' },
+  { key:'其他', seal:'他', tilt:'2deg' },
+  { key:'甜點', seal:'甘', tilt:'4deg' },
+  { key:'飲品', seal:'飲', tilt:'-2deg' },
+  { key:'要求', seal:'求', tilt:'3deg' },
+];
+
+const DEFAULT_DATA = {
+  '麵': [
+    { jp:'とんこつラーメン', zh:'豚骨拉麵', src:'九州特色濃湯' },
+    { jp:'ざるそば', zh:'涼蕎麥麵', src:'夏季常見' },
+    { jp:'肉うどん', zh:'牛肉烏龍麵', src:'讚岐烏龍麵著名' },
+  ],
+  '肉': [
+    { jp:'カルビ', zh:'牛五花肉', src:'燒肉店經典部位' },
+    { jp:'ハラミ', zh:'橫膈膜肉', src:'油脂適中、口感軟嫩' },
+    { jp:'リブロース', zh:'肋眼牛排', src:'油花豐富' },
+    { jp:'サーロイン', zh:'沙朗牛排', src:'經典部位' },
+  ],
+  '海鮮': [
+    { jp:'握り寿司', zh:'握壽司', src:'迴轉壽司常見' },
+    { jp:'刺身盛り合わせ', zh:'生魚片拼盤', src:'居酒屋、壽司店常見' },
+    { jp:'海老天丼', zh:'炸蝦天丼', src:'蓋飯類' },
+  ],
+  '其他': [],
+  '甜點': [
+    { jp:'抹茶パフェ', zh:'抹茶聖代', src:'京都、鎌倉常見' },
+    { jp:'どら焼き', zh:'銅鑼燒', src:'傳統和菓子' },
+    { jp:'ほうじ茶ロール', zh:'焙茶蛋糕捲', src:'咖啡廳常見' },
+  ],
+  '飲品': [
+    { jp:'ブレンドコーヒー', zh:'綜合咖啡', src:'喫茶店基本款' },
+    { jp:'生ビール', zh:'生啤酒', src:'居酒屋必點' },
+    { jp:'ゆずサワー', zh:'柚子沙瓦', src:'居酒屋人氣飲品' },
+    { jp:'ほうじ茶', zh:'焙茶', src:'溫和不苦澀' },
+  ],
+  '要求': [
+    { jp:'辛さ控えめでお願いします', zh:'麻煩少辣', src:'點餐常用' },
+    { jp:'氷なしでお願いします', zh:'麻煩去冰', src:'飲料點餐常用' },
+    { jp:'アレルギーがあります', zh:'我對特定食物過敏', src:'告知店家過敏原' },
+    { jp:'おすすめは何ですか？', zh:'有推薦的餐點嗎？', src:'詢問店家推薦' },
+    { jp:'お会計をお願いします', zh:'麻煩結帳', src:'用餐後常用' },
+  ],
+};
+
+// map old category keys (from an earlier version of this page) onto the new ones,
+// so anyone reopening the page keeps whatever they had already added
+const LEGACY_MERGE = {
+  '麵類': '麵',
+  '燒肉': '肉',
+  '牛排': '肉',
+  '咖啡': '飲品',
+};
+
+let data = null;
+let searchTerm = '';
+
+const TTS_SUPPORTED = 'speechSynthesis' in window;
+const SPEAKER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 9 8 9 13 4 13 20 8 15 3 15 3 9"/><path d="M16 8a5 5 0 0 1 0 8"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+
+function copyText(text, el){
+  const flash = ()=>{
+    el.classList.add('copied');
+    setTimeout(()=> el.classList.remove('copied'), 900);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(flash).catch(()=> fallbackCopy(text, flash));
+  } else {
+    fallbackCopy(text, flash);
+  }
+}
+
+function fallbackCopy(text, cb){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); }catch(e){ /* ignore */ }
+  document.body.removeChild(ta);
+  cb();
+}
+
+function speakJapanese(text, btn){
+  if(!TTS_SUPPORTED) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  utter.rate = 0.9;
+  if(btn){
+    btn.classList.add('speaking');
+    utter.onend = ()=> btn.classList.remove('speaking');
+    utter.onerror = ()=> btn.classList.remove('speaking');
+  }
+  window.speechSynthesis.speak(utter);
+}
+
+// Works both inside Claude (window.storage) and when this file is hosted
+// on its own (falls back to the browser's localStorage) so the page keeps
+// remembering entries either way.
+async function storageGet(key){
+  if(window.storage && window.storage.get){
+    try{ return await window.storage.get(key, false); }
+    catch(e){ /* fall through to localStorage */ }
+  }
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? { value: raw } : null;
+  }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  if(window.storage && window.storage.set){
+    try{ await window.storage.set(key, value, false); return; }
+    catch(e){ /* fall through to localStorage */ }
+  }
+  try{ localStorage.setItem(key, value); }catch(e){ /* ignore */ }
+}
+
+async function loadData(){
+  try{
+    const res = await storageGet(STORAGE_KEY);
+    if(res && res.value){
+      const stored = JSON.parse(res.value);
+      data = {};
+      CATEGORY_META.forEach(c => { data[c.key] = stored[c.key] ? stored[c.key].slice() : []; });
+      // pull in anything filed under an old category name
+      let migrated = false;
+      Object.keys(stored).forEach(oldKey=>{
+        const target = LEGACY_MERGE[oldKey];
+        if(target && Array.isArray(stored[oldKey]) && stored[oldKey].length){
+          data[target] = data[target].concat(stored[oldKey]);
+          migrated = true;
+        }
+      });
+      if(migrated) await saveData();
+      return;
+    }
+  }catch(e){ /* not found or storage unavailable */ }
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  saveData();
+}
+
+async function saveData(){
+  await storageSet(STORAGE_KEY, JSON.stringify(data));
+}
+
+function buildNav(){
+  const nav = document.getElementById('navScroll');
+  nav.innerHTML = '';
+  CATEGORY_META.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className = 'navpill';
+    btn.textContent = c.key;
+    btn.dataset.cat = c.key;
+    btn.onclick = ()=> document.getElementById('sec-'+c.key).scrollIntoView({behavior:'smooth', block:'start'});
+    nav.appendChild(btn);
+  });
+}
+
+function matches(item){
+  if(!searchTerm) return true;
+  const t = searchTerm.toLowerCase();
+  return (item.jp && item.jp.toLowerCase().includes(t)) ||
+         (item.zh && item.zh.toLowerCase().includes(t)) ||
+         (item.src && item.src.toLowerCase().includes(t));
+}
+
+function render(){
+  const container = document.getElementById('container');
+  container.innerHTML = '';
+
+  CATEGORY_META.forEach(c=>{
+    const items = data[c.key] || [];
+    const filtered = items.filter(matches);
+    if(searchTerm && filtered.length === 0) return; // hide empty section while searching
+
+    const section = document.createElement('section');
+    section.className = 'category';
+    section.id = 'sec-' + c.key;
+
+    section.innerHTML = `
+      <div class="cat-head">
+        <div class="seal" style="--tilt:${c.tilt}">${c.seal}</div>
+        <div class="cat-titles">
+          <h2>${c.key}</h2>
+          <div class="count">${items.length} 項</div>
+        </div>
+      </div>
+      <div class="rule"></div>
+    `;
+
+    const cardsWrap = document.createElement('div');
+    cardsWrap.className = 'cards';
+
+    if(filtered.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = '尚無項目，點下方新增第一筆吧';
+      cardsWrap.appendChild(empty);
+    } else {
+      filtered.forEach(item=>{
+        const realIndex = items.indexOf(item);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.idx = realIndex;
+
+        const srcFull = item.src || '';
+        const srcShort = srcFull.length > 6 ? srcFull.slice(0, 6) + '…' : srcFull;
+
+        card.innerHTML = `
+          <div class="ctrl-top">
+            <button class="edit" title="編輯">${EDIT_ICON}</button>
+            <button class="del" title="刪除">×</button>
+          </div>
+          <div class="row1">
+            ${searchTerm ? '' : '<span class="handle" title="拖曳排序">≡</span>'}
+            ${TTS_SUPPORTED ? `<button class="speak" title="唸出日文">${SPEAKER_ICON}</button>` : ''}
+            <span class="jp" title="點一下複製日文">${escapeHtml(item.jp)}</span>
+          </div>
+          <div class="row2">
+            <span class="zh">${escapeHtml(item.zh)}</span>
+            ${srcFull ? `<span class="src" title="長按看完整來源">${escapeHtml(srcShort)}</span>` : ''}
+          </div>
+        `;
+        card.querySelector('.del').onclick = ()=> deleteItem(c.key, realIndex);
+        card.querySelector('.edit').onclick = ()=> toggleEditForm(c.key, realIndex, card);
+        const jpEl = card.querySelector('.jp');
+        jpEl.addEventListener('click', ()=> copyText(item.jp, jpEl));
+        const speakBtn = card.querySelector('.speak');
+        if(speakBtn){
+          speakBtn.addEventListener('click', ()=> speakJapanese(item.jp, speakBtn));
+        }
+        const srcEl = card.querySelector('.src');
+        if(srcEl && srcFull.length > 6){
+          const reveal = ()=>{ srcEl.textContent = srcFull; srcEl.classList.add('expanded'); };
+          const hide = ()=>{ srcEl.textContent = srcShort; srcEl.classList.remove('expanded'); };
+          srcEl.addEventListener('pointerdown', reveal);
+          srcEl.addEventListener('pointerup', hide);
+          srcEl.addEventListener('pointerleave', hide);
+        }
+        if(!searchTerm){
+          card.querySelector('.handle').addEventListener('pointerdown', (e)=> startDrag(e, c.key, card, cardsWrap));
+        }
+        cardsWrap.appendChild(card);
+      });
+    }
+    section.appendChild(cardsWrap);
+
+    // add form
+    const toggle = document.createElement('button');
+    toggle.className = 'add-toggle';
+    toggle.textContent = '＋ 新增項目到「' + c.key + '」';
+    const form = document.createElement('div');
+    form.className = 'add-form';
+    form.innerHTML = `
+      <div class="row">
+        <input type="text" placeholder="日文名稱" class="f-jp">
+        <input type="text" placeholder="中文名稱" class="f-zh">
+      </div>
+      <div class="row">
+        <input type="text" placeholder="來源（選填，例如店名）" class="f-src">
+      </div>
+      <div class="actions">
+        <button class="cancel">取消</button>
+        <button class="submit">加入清單</button>
+      </div>
+    `;
+    toggle.onclick = ()=>{
+      form.classList.toggle('open');
+    };
+    form.querySelector('.cancel').onclick = ()=> form.classList.remove('open');
+    form.querySelector('.submit').onclick = ()=>{
+      const jp = form.querySelector('.f-jp').value.trim();
+      const zh = form.querySelector('.f-zh').value.trim();
+      const src = form.querySelector('.f-src').value.trim();
+      if(!jp && !zh){ form.querySelector('.f-jp').focus(); return; }
+      addItem(c.key, jp, zh, src);
+    };
+    section.appendChild(toggle);
+    section.appendChild(form);
+
+    container.appendChild(section);
+  });
+
+  updateActiveNav();
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function addItem(cat, jp, zh, src){
+  data[cat].push({ jp, zh, src });
+  await saveData();
+  render();
+  document.getElementById('sec-'+cat).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function deleteItem(cat, index){
+  data[cat].splice(index, 1);
+  await saveData();
+  render();
+}
+
+function toggleEditForm(cat, index, card){
+  const existing = card.nextElementSibling;
+  if(existing && existing.classList.contains('edit-form')){
+    existing.remove();
+    return;
+  }
+  document.querySelectorAll('.edit-form').forEach(f => f.remove());
+
+  const item = data[cat][index];
+  const form = document.createElement('div');
+  form.className = 'add-form open edit-form';
+  form.innerHTML = `
+    <div class="row">
+      <input type="text" class="f-jp" placeholder="日文名稱">
+      <input type="text" class="f-zh" placeholder="中文名稱">
+    </div>
+    <div class="row">
+      <input type="text" class="f-src" placeholder="來源（選填）">
+    </div>
+    <div class="actions">
+      <button class="cancel">取消</button>
+      <button class="submit">儲存修改</button>
+    </div>
+  `;
+  form.querySelector('.f-jp').value = item.jp || '';
+  form.querySelector('.f-zh').value = item.zh || '';
+  form.querySelector('.f-src').value = item.src || '';
+
+  form.querySelector('.cancel').onclick = ()=> form.remove();
+  form.querySelector('.submit').onclick = async ()=>{
+    const jp = form.querySelector('.f-jp').value.trim();
+    const zh = form.querySelector('.f-zh').value.trim();
+    const src = form.querySelector('.f-src').value.trim();
+    if(!jp && !zh){ form.querySelector('.f-jp').focus(); return; }
+    data[cat][index] = { jp, zh, src };
+    await saveData();
+    render();
+  };
+
+  card.insertAdjacentElement('afterend', form);
+}
+
+function startDrag(e, cat, card, wrap){
+  e.preventDefault();
+  const handle = e.currentTarget;
+  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+  card.classList.add('dragging');
+
+  function onMove(ev){
+    const y = ev.clientY;
+    const siblings = [...wrap.querySelectorAll('.card:not(.dragging)')];
+    const after = siblings.find(sib=>{
+      const box = sib.getBoundingClientRect();
+      return y <= box.top + box.height / 2;
+    });
+    if(after) wrap.insertBefore(card, after);
+    else wrap.appendChild(card);
+  }
+
+  function onUp(ev){
+    card.classList.remove('dragging');
+    try{ handle.releasePointerCapture(ev.pointerId); }catch(err){}
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    commitOrder(cat, wrap);
+  }
+
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+
+async function commitOrder(cat, wrap){
+  const items = data[cat];
+  const newOrder = [...wrap.querySelectorAll('.card')].map(c => items[parseInt(c.dataset.idx, 10)]);
+  data[cat] = newOrder;
+  await saveData();
+  render();
+}
+
+function computeActiveNav(){
+  const pills = document.querySelectorAll('.navpill');
+  const sections = CATEGORY_META
+    .map(c => document.getElementById('sec-' + c.key))
+    .filter(Boolean);
+  if(sections.length === 0) return;
+
+  const navbar = document.querySelector('.navbar');
+  const line = navbar.offsetHeight + 24; // reference line just below the sticky nav
+
+  let current = sections[0];
+  for(const sec of sections){
+    if(sec.getBoundingClientRect().top - line <= 0){
+      current = sec;
+    } else {
+      break;
+    }
+  }
+  const cat = current.id.replace('sec-', '');
+  pills.forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
+}
+
+let scrollListenerAttached = false;
+function updateActiveNav(){
+  if(!scrollListenerAttached){
+    let ticking = false;
+    window.addEventListener('scroll', ()=>{
+      if(!ticking){
+        requestAnimationFrame(()=>{ computeActiveNav(); ticking = false; });
+        ticking = true;
+      }
+    }, { passive:true });
+    scrollListenerAttached = true;
+  }
+  computeActiveNav();
+}
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.trim();
+  render();
+});
+
+(async function init(){
+  buildNav();
+  await loadData();
+  render();
+})();
+</script>
+</body>
+</html>
