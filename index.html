@@ -894,6 +894,7 @@ function render(){
     `;
     const addLinksEditor = createLinksEditor([]);
     form.appendChild(addLinksEditor.element);
+    form.querySelector('.f-date').value = todayInputDate();
     const addActions = document.createElement('div');
     addActions.className = 'actions';
     addActions.innerHTML = `<button class="cancel">取消</button><button class="submit">加入清單</button>`;
@@ -928,6 +929,11 @@ function escapeHtml(s){
 
 function toInputDate(s){ return (s || '').replace(/\//g, '-'); }
 function toDisplayDate(s){ return (s || '').replace(/-/g, '/'); }
+function todayInputDate(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
 
 async function addItem(cat, jp, zh, src, links, priceDate, priceYen, priceLocation){
   data[cat].push({
@@ -1068,7 +1074,7 @@ function toggleEditForm(cat, index, card){
   form.querySelector('.f-jp').value = item.jp || '';
   form.querySelector('.f-zh').value = item.zh || '';
   form.querySelector('.f-src').value = item.src || '';
-  form.querySelector('.f-date').value = toInputDate(item.priceDate || '');
+  form.querySelector('.f-date').value = toInputDate(item.priceDate || '') || todayInputDate();
   form.querySelector('.f-yen').value = item.priceYen || '';
   form.querySelector('.f-loc').value = item.priceLocation || '';
 
