@@ -226,7 +226,6 @@
     border-radius:var(--radius);
     padding:9px 78px 9px 10px;
   }
-  .card.has-price{ padding-right:180px; }
   .card.dragging{ opacity:.55; border-style:dashed; }
 
   .card .ctrl-top{
@@ -236,12 +235,12 @@
     align-items:center;
     gap:4px;
   }
-  .card .price-tag{
-    flex:0 0 auto;
+  .row-price{
+    text-align:right;
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-size:10px;
     color:var(--ink-soft);
-    white-space:nowrap;
+    margin-top:-2px;
   }
   .card .link-open{
     flex:0 0 auto;
@@ -818,12 +817,10 @@ function render(){
           priceParts.push('¥' + (isNaN(yenNum) ? item.priceYen : yenNum.toLocaleString()));
         }
         const priceTag = priceParts.join('・');
-        if(priceTag) card.classList.add('has-price');
         const priceTitle = item.priceLocation ? ('查價地點：' + item.priceLocation) : '';
 
         card.innerHTML = `
           <div class="ctrl-top">
-            ${priceTag ? `<span class="price-tag" title="${escapeHtml(priceTitle)}">${escapeHtml(priceTag)}</span>` : ''}
             ${itemLinks.length ? `<button class="link-open" title="開啟連結">${LINK_ICON}</button>` : ''}
             <button class="edit" title="編輯">${EDIT_ICON}</button>
             <button class="del" title="刪除">×</button>
@@ -833,6 +830,7 @@ function render(){
             ${TTS_SUPPORTED ? `<button class="speak" title="唸出日文">${SPEAKER_ICON}</button>` : ''}
             <span class="jp" title="點一下複製日文">${escapeHtml(item.jp)}</span>
           </div>
+          ${priceTag ? `<div class="row-price" title="${escapeHtml(priceTitle)}">${escapeHtml(priceTag)}</div>` : ''}
           <div class="row2">
             <span class="zh">${escapeHtml(item.zh)}</span>
             ${srcFull ? `<span class="src" title="長按看完整來源">${escapeHtml(srcShort)}</span>` : ''}
