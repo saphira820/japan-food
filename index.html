@@ -235,12 +235,16 @@
     align-items:center;
     gap:4px;
   }
-  .row-price{
-    text-align:right;
+  .card .price-tag{
+    flex:0 0 auto;
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-size:10px;
-    color:var(--ink-soft);
-    margin-top:-2px;
+    letter-spacing:.02em;
+    color:var(--matcha);
+    background:var(--paper-deep);
+    padding:2px 8px;
+    border-radius:20px;
+    white-space:nowrap;
   }
   .card .link-open{
     flex:0 0 auto;
@@ -830,9 +834,9 @@ function render(){
             ${TTS_SUPPORTED ? `<button class="speak" title="唸出日文">${SPEAKER_ICON}</button>` : ''}
             <span class="jp" title="點一下複製日文">${escapeHtml(item.jp)}</span>
           </div>
-          ${priceTag ? `<div class="row-price" title="${escapeHtml(priceTitle)}">${escapeHtml(priceTag)}</div>` : ''}
           <div class="row2">
             <span class="zh">${escapeHtml(item.zh)}</span>
+            ${priceTag ? `<span class="price-tag" title="${escapeHtml(priceTitle)}">${escapeHtml(priceTag)}</span>` : ''}
             ${srcFull ? `<span class="src" title="長按看完整來源">${escapeHtml(srcShort)}</span>` : ''}
           </div>
         `;
