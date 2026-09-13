@@ -19,6 +19,7 @@
     --accent:#B94A28;
     --accent-soft:#E7C9AE;
     --matcha:#5C7A52;
+    --matcha-soft:#E1E9D8;
     --gold:#C79A2E;
     --line:#DCD0B6;
     --radius:6px;
@@ -241,7 +242,7 @@
     font-size:10px;
     letter-spacing:.02em;
     color:var(--matcha);
-    background:var(--paper-deep);
+    background:var(--matcha-soft);
     padding:2px 8px;
     border-radius:20px;
     white-space:nowrap;
@@ -747,7 +748,7 @@ function showUpdatedAt(iso){
   if(!iso){ el.textContent = ''; return; }
   const d = new Date(iso);
   const pad = n => String(n).padStart(2, '0');
-  el.textContent = '更新於 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  el.textContent = '更新於 ' + d.getFullYear() + '/' + pad(d.getMonth()+1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function buildNav(){
