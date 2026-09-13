@@ -89,6 +89,14 @@
   .io-icons button:hover{ color:var(--accent); border-color:var(--accent-soft); }
   .io-icons button svg{ width:15px; height:15px; display:block; }
   .io-icons button.cloud-active{ color:var(--matcha); border-color:var(--matcha); }
+  .updated-at{
+    position:absolute;
+    top:48px; right:14px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:10px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
 
   /* ---------- Sticky nav ---------- */
   .navbar{
@@ -509,6 +517,7 @@
     </button>
     <input type="file" id="importFile" accept=".csv" style="display:none">
   </div>
+  <div class="updated-at" id="updatedAt"></div>
   <div class="eyebrow">Japan Food Lookup</div>
   <h1>日本美食速查</h1>
 </div>
@@ -531,6 +540,7 @@
 
 <script>
 const STORAGE_KEY = 'foodguide-data-v1';
+const META_KEY = 'foodguide-updated-at';
 
 const CATEGORY_META = [
   { key:'麵', seal:'麺', tilt:'-4deg' },
@@ -715,6 +725,18 @@ async function loadData(){
 
 async function saveData(){
   await storageSet(STORAGE_KEY, JSON.stringify(data));
+  const iso = new Date().toISOString();
+  await storageSet(META_KEY, JSON.stringify(iso));
+  showUpdatedAt(iso);
+}
+
+function showUpdatedAt(iso){
+  const el = document.getElementById('updatedAt');
+  if(!el) return;
+  if(!iso){ el.textContent = ''; return; }
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  el.textContent = '更新於 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function buildNav(){
@@ -1270,6 +1292,10 @@ document.getElementById('cloudBtn').addEventListener('click', async ()=>{
   updateCloudBtnState();
   await loadData();
   render();
+  try{
+    const metaRes = await storageGet(META_KEY);
+    showUpdatedAt(metaRes && metaRes.value ? JSON.parse(metaRes.value) : null);
+  }catch(e){ /* ignore, just leave the label blank */ }
 })();
 </script>
 </body>
