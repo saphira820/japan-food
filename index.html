@@ -88,6 +88,7 @@
   }
   .io-icons button:hover{ color:var(--accent); border-color:var(--accent-soft); }
   .io-icons button svg{ width:15px; height:15px; display:block; }
+  .io-icons button.cloud-active{ color:var(--matcha); border-color:var(--matcha); }
 
   /* ---------- Sticky nav ---------- */
   .navbar{
@@ -497,6 +498,9 @@
 
 <div class="hero">
   <div class="io-icons">
+    <button id="cloudBtn" title="雲端同步設定">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+    </button>
     <button id="exportBtn" title="匯出成 Excel (CSV)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
@@ -634,8 +638,30 @@ function speakJapanese(text, btn){
 
 // Works both inside Claude (window.storage) and when this file is hosted
 // on its own (falls back to the browser's localStorage) so the page keeps
-// remembering entries either way.
+// remembering entries either way. If a cloud database URL has been set up
+// (see setupCloudSync below), that takes priority so multiple devices stay
+// in sync; local storage still acts as an offline cache either way.
+const CLOUD_URL_KEY = 'foodguide-cloud-url';
+
+function getCloudUrl(){
+  try{ return localStorage.getItem(CLOUD_URL_KEY) || ''; }catch(e){ return ''; }
+}
+function setCloudUrl(url){
+  try{ localStorage.setItem(CLOUD_URL_KEY, url); }catch(e){ /* ignore */ }
+}
+
 async function storageGet(key){
+  const cloudUrl = getCloudUrl();
+  if(cloudUrl){
+    try{
+      const res = await fetch(cloudUrl + '/' + key + '.json');
+      if(res.ok){
+        const val = await res.json();
+        if(val !== null) return { value: JSON.stringify(val) };
+        return null; // path exists but has no data yet
+      }
+    }catch(e){ /* offline or blocked — fall through to local cache */ }
+  }
   if(window.storage && window.storage.get){
     try{ return await window.storage.get(key, false); }
     catch(e){ /* fall through to localStorage */ }
@@ -646,8 +672,18 @@ async function storageGet(key){
   }catch(e){ return null; }
 }
 async function storageSet(key, value){
+  const cloudUrl = getCloudUrl();
+  if(cloudUrl){
+    try{
+      await fetch(cloudUrl + '/' + key + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: value,
+      });
+    }catch(e){ /* offline or blocked — local cache below still saves it */ }
+  }
   if(window.storage && window.storage.set){
-    try{ await window.storage.set(key, value, false); return; }
+    try{ await window.storage.set(key, value, false); }
     catch(e){ /* fall through to localStorage */ }
   }
   try{ localStorage.setItem(key, value); }catch(e){ /* ignore */ }
@@ -1081,13 +1117,13 @@ function todayStr(){
 }
 
 function exportCSV(){
-  const rows = [['分類','日文','中文','來源','連結']];
+  const rows = [['分類','日文','中文','來源','連結名稱','連結網址']];
   CATEGORY_META.forEach(c=>{
     (data[c.key] || []).forEach(item=>{
-      const linksStr = normalizeLinks(item.links)
-        .map(l => l.label ? (l.label + '::' + l.url) : l.url)
-        .join(' | ');
-      rows.push([c.key, item.jp || '', item.zh || '', item.src || '', linksStr]);
+      const links = normalizeLinks(item.links);
+      const namesStr = links.map(l => l.label).join(' | ');
+      const urlsStr = links.map(l => l.url).join(' | ');
+      rows.push([c.key, item.jp || '', item.zh || '', item.src || '', namesStr, urlsStr]);
     });
   });
   const csv = rows.map(r => r.map(csvField).join(',')).join('\r\n');
@@ -1139,10 +1175,12 @@ async function importCSV(text){
     jp: header.indexOf('日文'),
     zh: header.indexOf('中文'),
     src: header.indexOf('來源'),
-    links: header.indexOf('連結'),
+    linkNames: header.indexOf('連結名稱'),
+    linkUrls: header.indexOf('連結網址'),
+    linksOld: header.indexOf('連結'), // backward compatibility with the earlier combined-column export
   };
   if(idx.cat === -1 || idx.jp === -1 || idx.zh === -1){
-    alert('欄位格式不符，請確認標題列有「分類」「日文」「中文」（「來源」「連結」選填）。');
+    alert('欄位格式不符，請確認標題列有「分類」「日文」「中文」（「來源」「連結名稱」「連結網址」選填）。');
     return;
   }
 
@@ -1157,12 +1195,23 @@ async function importCSV(text){
     const jp = (r[idx.jp] || '').trim();
     const zh = (r[idx.zh] || '').trim();
     const src = idx.src > -1 ? (r[idx.src] || '').trim() : '';
-    const links = idx.links > -1
-      ? (r[idx.links] || '').split('|').map(s => s.trim()).filter(Boolean).slice(0, MAX_LINKS).map(piece=>{
-          const sep = piece.indexOf('::');
-          return sep > -1 ? { label: piece.slice(0, sep).trim(), url: piece.slice(sep+2).trim() } : { label:'', url: piece };
-        })
-      : [];
+
+    let links = [];
+    if(idx.linkUrls > -1){
+      const names = idx.linkNames > -1 ? (r[idx.linkNames] || '').split('|').map(s => s.trim()) : [];
+      const urls = (r[idx.linkUrls] || '').split('|').map(s => s.trim());
+      const count = Math.max(names.length, urls.length);
+      for(let k = 0; k < count && links.length < MAX_LINKS; k++){
+        const url = urls[k] || '';
+        if(!url) continue;
+        links.push({ label: names[k] || '', url });
+      }
+    } else if(idx.linksOld > -1){
+      links = (r[idx.linksOld] || '').split('|').map(s => s.trim()).filter(Boolean).slice(0, MAX_LINKS).map(piece=>{
+        const sep = piece.indexOf('::');
+        return sep > -1 ? { label: piece.slice(0, sep).trim(), url: piece.slice(sep+2).trim() } : { label:'', url: piece };
+      });
+    }
     if(!jp && !zh) continue;
     if(newData[cat]) newData[cat].push({ jp, zh, src, links });
     else { newData['其他'].push({ jp, zh, src, links }); unknownCount++; }
@@ -1191,8 +1240,34 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   reader.readAsText(file, 'UTF-8');
 });
 
+function updateCloudBtnState(){
+  const btn = document.getElementById('cloudBtn');
+  btn.classList.toggle('cloud-active', !!getCloudUrl());
+  btn.title = getCloudUrl() ? '雲端同步已開啟（點一下可修改或取消）' : '雲端同步設定';
+}
+
+document.getElementById('cloudBtn').addEventListener('click', async ()=>{
+  const current = getCloudUrl();
+  const input = window.prompt(
+    '貼上 Firebase Realtime Database 的網址（databaseURL），例如：\nhttps://your-project-default-rtdb.firebaseio.com\n\n清空後按確定可以取消雲端同步，改回只存在這台裝置。',
+    current
+  );
+  if(input === null) return; // cancelled, no change
+  const trimmed = input.trim().replace(/\/+$/, '');
+  setCloudUrl(trimmed);
+  updateCloudBtnState();
+  if(trimmed){
+    await loadData();
+    render();
+    alert('雲端同步網址已設定，資料已同步。記得在其他裝置上也貼同一個網址，才會看到一樣的內容。');
+  } else {
+    alert('已取消雲端同步，改回只存在這台裝置。');
+  }
+});
+
 (async function init(){
   buildNav();
+  updateCloudBtnState();
   await loadData();
   render();
 })();
