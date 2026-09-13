@@ -226,6 +226,7 @@
     border-radius:var(--radius);
     padding:9px 78px 9px 10px;
   }
+  .card.has-price{ padding-right:180px; }
   .card.dragging{ opacity:.55; border-style:dashed; }
 
   .card .ctrl-top{
@@ -233,7 +234,14 @@
     top:5px; right:4px;
     display:flex;
     align-items:center;
-    gap:2px;
+    gap:4px;
+  }
+  .card .price-tag{
+    flex:0 0 auto;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:10px;
+    color:var(--ink-soft);
+    white-space:nowrap;
   }
   .card .link-open{
     flex:0 0 auto;
@@ -803,8 +811,19 @@ function render(){
         const srcShort = srcFull.length > 10 ? srcFull.slice(0, 10) + '…' : srcFull;
         const itemLinks = normalizeLinks(item.links).slice(0, MAX_LINKS);
 
+        const priceParts = [];
+        if(item.priceDate) priceParts.push(item.priceDate);
+        if(item.priceYen) {
+          const yenNum = Number(item.priceYen);
+          priceParts.push('¥' + (isNaN(yenNum) ? item.priceYen : yenNum.toLocaleString()));
+        }
+        const priceTag = priceParts.join('・');
+        if(priceTag) card.classList.add('has-price');
+        const priceTitle = item.priceLocation ? ('查價地點：' + item.priceLocation) : '';
+
         card.innerHTML = `
           <div class="ctrl-top">
+            ${priceTag ? `<span class="price-tag" title="${escapeHtml(priceTitle)}">${escapeHtml(priceTag)}</span>` : ''}
             ${itemLinks.length ? `<button class="link-open" title="開啟連結">${LINK_ICON}</button>` : ''}
             <button class="edit" title="編輯">${EDIT_ICON}</button>
             <button class="del" title="刪除">×</button>
@@ -865,6 +884,13 @@ function render(){
       <div class="row">
         <input type="text" placeholder="來源（選填，例如店名）" class="f-src">
       </div>
+      <div class="row">
+        <input type="date" class="f-date" title="查價日期（選填）">
+        <input type="number" min="0" placeholder="日幣價格（選填）" class="f-yen">
+      </div>
+      <div class="row">
+        <input type="text" placeholder="查價地點（選填，例如：河口湖 7-11）" class="f-loc">
+      </div>
     `;
     const addLinksEditor = createLinksEditor([]);
     form.appendChild(addLinksEditor.element);
@@ -881,8 +907,11 @@ function render(){
       const jp = form.querySelector('.f-jp').value.trim();
       const zh = form.querySelector('.f-zh').value.trim();
       const src = form.querySelector('.f-src').value.trim();
+      const priceDate = toDisplayDate(form.querySelector('.f-date').value);
+      const priceYen = form.querySelector('.f-yen').value.trim();
+      const priceLocation = form.querySelector('.f-loc').value.trim();
       if(!jp && !zh){ form.querySelector('.f-jp').focus(); return; }
-      addItem(c.key, jp, zh, src, addLinksEditor.getLinks());
+      addItem(c.key, jp, zh, src, addLinksEditor.getLinks(), priceDate, priceYen, priceLocation);
     };
     section.appendChild(toggle);
     section.appendChild(form);
@@ -897,8 +926,17 @@ function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-async function addItem(cat, jp, zh, src, links){
-  data[cat].push({ jp, zh, src, links: (links||[]).slice(0, MAX_LINKS) });
+function toInputDate(s){ return (s || '').replace(/\//g, '-'); }
+function toDisplayDate(s){ return (s || '').replace(/-/g, '/'); }
+
+async function addItem(cat, jp, zh, src, links, priceDate, priceYen, priceLocation){
+  data[cat].push({
+    jp, zh, src,
+    links: (links || []).slice(0, MAX_LINKS),
+    priceDate: priceDate || '',
+    priceYen: priceYen || '',
+    priceLocation: priceLocation || '',
+  });
   await saveData();
   render();
   document.getElementById('sec-'+cat).scrollIntoView({behavior:'smooth', block:'start'});
@@ -1019,10 +1057,20 @@ function toggleEditForm(cat, index, card){
     <div class="row">
       <input type="text" class="f-src" placeholder="來源（選填）">
     </div>
+    <div class="row">
+      <input type="date" class="f-date" title="查價日期（選填）">
+      <input type="number" min="0" placeholder="日幣價格（選填）" class="f-yen">
+    </div>
+    <div class="row">
+      <input type="text" placeholder="查價地點（選填，例如：河口湖 7-11）" class="f-loc">
+    </div>
   `;
   form.querySelector('.f-jp').value = item.jp || '';
   form.querySelector('.f-zh').value = item.zh || '';
   form.querySelector('.f-src').value = item.src || '';
+  form.querySelector('.f-date').value = toInputDate(item.priceDate || '');
+  form.querySelector('.f-yen').value = item.priceYen || '';
+  form.querySelector('.f-loc').value = item.priceLocation || '';
 
   const linksEditor = createLinksEditor(item.links || []);
   form.appendChild(linksEditor.element);
@@ -1037,8 +1085,11 @@ function toggleEditForm(cat, index, card){
     const jp = form.querySelector('.f-jp').value.trim();
     const zh = form.querySelector('.f-zh').value.trim();
     const src = form.querySelector('.f-src').value.trim();
+    const priceDate = toDisplayDate(form.querySelector('.f-date').value);
+    const priceYen = form.querySelector('.f-yen').value.trim();
+    const priceLocation = form.querySelector('.f-loc').value.trim();
     if(!jp && !zh){ form.querySelector('.f-jp').focus(); return; }
-    data[cat][index] = { jp, zh, src, links: linksEditor.getLinks() };
+    data[cat][index] = { jp, zh, src, links: linksEditor.getLinks(), priceDate, priceYen, priceLocation };
     await saveData();
     render();
   };
@@ -1139,13 +1190,13 @@ function todayStr(){
 }
 
 function exportCSV(){
-  const rows = [['分類','日文','中文','來源','連結名稱','連結網址']];
+  const rows = [['分類','日文','中文','來源','查價日期','日幣價格','查價地點','連結名稱','連結網址']];
   CATEGORY_META.forEach(c=>{
     (data[c.key] || []).forEach(item=>{
       const links = normalizeLinks(item.links);
       const namesStr = links.map(l => l.label).join(' | ');
       const urlsStr = links.map(l => l.url).join(' | ');
-      rows.push([c.key, item.jp || '', item.zh || '', item.src || '', namesStr, urlsStr]);
+      rows.push([c.key, item.jp || '', item.zh || '', item.src || '', item.priceDate || '', item.priceYen || '', item.priceLocation || '', namesStr, urlsStr]);
     });
   });
   const csv = rows.map(r => r.map(csvField).join(',')).join('\r\n');
@@ -1197,12 +1248,15 @@ async function importCSV(text){
     jp: header.indexOf('日文'),
     zh: header.indexOf('中文'),
     src: header.indexOf('來源'),
+    priceDate: header.indexOf('查價日期'),
+    priceYen: header.indexOf('日幣價格'),
+    priceLocation: header.indexOf('查價地點'),
     linkNames: header.indexOf('連結名稱'),
     linkUrls: header.indexOf('連結網址'),
     linksOld: header.indexOf('連結'), // backward compatibility with the earlier combined-column export
   };
   if(idx.cat === -1 || idx.jp === -1 || idx.zh === -1){
-    alert('欄位格式不符，請確認標題列有「分類」「日文」「中文」（「來源」「連結名稱」「連結網址」選填）。');
+    alert('欄位格式不符，請確認標題列有「分類」「日文」「中文」（其餘欄位選填）。');
     return;
   }
 
@@ -1217,6 +1271,9 @@ async function importCSV(text){
     const jp = (r[idx.jp] || '').trim();
     const zh = (r[idx.zh] || '').trim();
     const src = idx.src > -1 ? (r[idx.src] || '').trim() : '';
+    const priceDate = idx.priceDate > -1 ? (r[idx.priceDate] || '').trim() : '';
+    const priceYen = idx.priceYen > -1 ? (r[idx.priceYen] || '').trim() : '';
+    const priceLocation = idx.priceLocation > -1 ? (r[idx.priceLocation] || '').trim() : '';
 
     let links = [];
     if(idx.linkUrls > -1){
@@ -1235,8 +1292,8 @@ async function importCSV(text){
       });
     }
     if(!jp && !zh) continue;
-    if(newData[cat]) newData[cat].push({ jp, zh, src, links });
-    else { newData['其他'].push({ jp, zh, src, links }); unknownCount++; }
+    if(newData[cat]) newData[cat].push({ jp, zh, src, links, priceDate, priceYen, priceLocation });
+    else { newData['其他'].push({ jp, zh, src, links, priceDate, priceYen, priceLocation }); unknownCount++; }
   }
 
   let msg = '確定要匯入嗎？這會覆蓋目前頁面上所有的項目資料。';
